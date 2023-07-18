@@ -1,6 +1,8 @@
 # Created by https://www.toptal.com/developers/gitignore/api/sublimetext,pycharm,visualstudiocode,macos,python,jupyternotebooks
 # Edit at https://www.toptal.com/developers/gitignore?templates=sublimetext,pycharm,visualstudiocode,macos,python,jupyternotebooks
 
+example_output/*
+
 redis.log
 dump.rdb
 runs/*

@@ -3,6 +3,8 @@ import shutil
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 
+import parmed as pmd
+
 try:
     import openmm
     import openmm.app as app
@@ -60,6 +62,7 @@ def _configure_amber_implicit(
 
 
 def _configure_amber_explicit(
+    pdb_file: PathLike,
     top_file: PathLike,
     dt_ps: float,
     temperature_kelvin: float,
@@ -69,7 +72,8 @@ def _configure_amber_explicit(
     explicit_barostat: str,
 ) -> "app.Simulation":
     """Helper function to configure explicit amber simulations with openmm."""
-    top = app.AmberPrmtopFile(str(top_file))
+    top = pmd.load_file(top_file, xyz=pdb_file)
+    # top = app.AmberPrmtopFile(str(top_file))
     system = top.createSystem(
         nonbondedMethod=app.PME,
         nonbondedCutoff=1.0 * u.nanometer,
@@ -183,6 +187,7 @@ def configure_simulation(
         assert top_file is not None
         pdb = None
         sim = _configure_amber_explicit(
+            pdb_file,
             top_file,
             dt_ps,
             temperature_kelvin,

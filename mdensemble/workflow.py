@@ -192,7 +192,7 @@ if __name__ == "__main__":
 
     # Collect initial simulation directories, assumes they are in nested subdirectories
     simulation_input_dirs = [
-        p for p in cfg.simulation_input_dir.iterdir() if p.is_dir()
+        (p,) for p in cfg.simulation_input_dir.iterdir() if p.is_dir()
     ]
 
     thinker = Thinker(

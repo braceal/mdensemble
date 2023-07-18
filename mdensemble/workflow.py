@@ -14,11 +14,11 @@ from proxystore.store.file import FileStore
 
 from mdensemble.parsl import ComputeSettingsTypes
 from mdensemble.simulate import MDSimulationSettings
-from mdensemble.utils import BaseSettings
+from mdensemble.utils import BaseSettings, path_validator
 
 
 def run_task(
-    pdb_file: Path,
+    input_dir: Path,
     output_dir: Path,
     config: MDSimulationSettings,
     node_local_path: Optional[Path] = None,
@@ -27,8 +27,11 @@ def run_task(
 
     Parameters
     ----------
-    pdb_file : Path
-        Path to the protein structure .pdb file.
+    input_dir : Path
+        Path to an input directory containing either a .pdb or .gro file with the
+        system structure, and optionally a .top or .prmtop file with the system topology.
+        If the directory contains a checkpoint.chk file, the simulation will be loaded
+        from the checkpoint.
     output_dir : Path
         Path to the output directory to write a subdirectory for each
         simulation task containing the simulation output files.
@@ -53,7 +56,7 @@ def run_task(
     workdir = workdir / workdir_name
 
     # Run the simulation
-    run_simulation(pdb_file=pdb_file, workdir=workdir, config=config)
+    run_simulation(input_dir, workdir, config)
 
     # Move from node local to persitent storage
     if node_local_path is not None:
@@ -131,6 +134,9 @@ class WorkflowSettings(BaseSettings):
     """Node local storage option for writing output csv files."""
     compute_settings: ComputeSettingsTypes
     """The compute settings to use."""
+
+    # validators
+    _simulation_input_dir_exists = path_validator("simulation_input_dir")
 
     def configure_logging(self) -> None:
         """Set up logging."""

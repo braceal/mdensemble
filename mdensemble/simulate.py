@@ -247,12 +247,30 @@ class MDSimulationSettings(BaseSettings):
     "MonteCarloBarostat" by default, or "MonteCarloAnisotropicBarostat"."""
 
 
-def run_simulation(pdb_file: Path, workdir: Path, config: MDSimulationSettings) -> None:
-    # Select pdb_file input directory
-    input_dir = pdb_file.parent
+def run_simulation(input_dir: Path, workdir: Path, config: MDSimulationSettings) -> None:
+    """Run a molecular dynamics simulation with OpenMM.
 
-    # Copy PDB file to workdir
-    pdb_file = copy_to_workdir(pdb_file, workdir)
+    Parameters
+    ----------
+    input_dir : Path
+        Path to an input directory containing either a .pdb or .gro file with the
+        system structure, and optionally a .top or .prmtop file with the system topology.
+        If the directory contains a checkpoint.chk file, the simulation will be loaded
+        from the checkpoint.
+    workdir : Path
+        The directory to write the simulation output files to. Could be the same as input_dir
+        if we are restarting a simulation.
+    config : MDSimulationSettings
+        The simulation settings to use.
+    """
+
+    # Discover structure file to and copy to workdir
+    structure_file = next(input_dir.glob("*.pdb"), None)
+    if structure_file is None:
+        structure_file = next(input_dir.glob("*.gro"), None)
+    if structure_file is None:
+        raise FileNotFoundError(f"No .pdb or .gro file found in simulation input directory: {input_dir}.")
+    structure_file = copy_to_workdir(structure_file, workdir)
 
     # Discover topology file and copy to workdir
     top_file = next(input_dir.glob("*.top"), None)
@@ -268,7 +286,7 @@ def run_simulation(pdb_file: Path, workdir: Path, config: MDSimulationSettings) 
 
     # Initialize an OpenMM simulation
     sim = configure_simulation(
-        pdb_file=pdb_file,
+        pdb_file=structure_file,
         top_file=top_file,
         solvent_type=config.solvent_type,
         gpu_index=0,

@@ -73,9 +73,9 @@ def _configure_amber_explicit(
     explicit_barostat: str,
 ) -> "app.Simulation":
     """Helper function to configure explicit amber simulations with openmm."""
-    top = pmd.load_file(top_file, xyz=pdb_file)
+    pdb = pmd.load_file(str(top_file), xyz=str(pdb_file))
     # top = app.AmberPrmtopFile(str(top_file))
-    system = top.createSystem(
+    system = pdb.createSystem(
         nonbondedMethod=app.PME,
         nonbondedCutoff=1.0 * u.nanometer,
         constraints=app.HBonds,
@@ -106,10 +106,10 @@ def _configure_amber_explicit(
         raise ValueError(f"Invalid explicit_barostat option: {explicit_barostat}")
 
     sim = app.Simulation(
-        top.topology, system, integrator, platform, platform_properties
+        pdb.topology, system, integrator, platform, platform_properties
     )
 
-    return sim
+    return sim, pdb
 
 
 def configure_simulation(
@@ -193,8 +193,7 @@ def configure_simulation(
     else:
         assert solvent_type == "explicit"
         assert top_file is not None
-        pdb = None
-        sim = _configure_amber_explicit(
+        sim, pdb = _configure_amber_explicit(
             pdb_file,
             top_file,
             dt_ps,

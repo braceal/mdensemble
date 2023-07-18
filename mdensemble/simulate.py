@@ -345,7 +345,7 @@ def run_simulation(
         )
     )
     sim.reporters.append(
-        app.CheckpointReporter(workdir / "checkpoint.chk", report_steps)
+        app.CheckpointReporter(str(workdir / "checkpoint.chk"), report_steps)
     )
 
     # Run simulation

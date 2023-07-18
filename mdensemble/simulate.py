@@ -214,7 +214,10 @@ def configure_simulation(
     if set_positions:
         if pdb is None:
             pdb = app.PDBFile(str(pdb_file))
-        sim.context.setPositions(pdb.getPositions())
+        if isinstance(pdb, app.PDBFile):
+            sim.context.setPositions(pdb.getPositions())
+        else:
+            sim.context.setPositions(pdb.positions)
 
     # Set velocities to temperature
     if set_velocities:

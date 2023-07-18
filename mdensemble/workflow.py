@@ -52,7 +52,7 @@ def run_task(
         workdir = output_dir
 
     # Output directory name
-    workdir_name = "task-" + str(uuid.uuid4())
+    workdir_name = "simulation-" + str(uuid.uuid4())
     workdir = workdir / workdir_name
 
     # Run the simulation

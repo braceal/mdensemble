@@ -247,7 +247,9 @@ class MDSimulationSettings(BaseSettings):
     "MonteCarloBarostat" by default, or "MonteCarloAnisotropicBarostat"."""
 
 
-def run_simulation(input_dir: Path, workdir: Path, config: MDSimulationSettings) -> None:
+def run_simulation(
+    input_dir: Path, workdir: Path, config: MDSimulationSettings
+) -> None:
     """Run a molecular dynamics simulation with OpenMM.
 
     Parameters
@@ -269,7 +271,9 @@ def run_simulation(input_dir: Path, workdir: Path, config: MDSimulationSettings)
     if structure_file is None:
         structure_file = next(input_dir.glob("*.gro"), None)
     if structure_file is None:
-        raise FileNotFoundError(f"No .pdb or .gro file found in simulation input directory: {input_dir}.")
+        raise FileNotFoundError(
+            f"No .pdb or .gro file found in simulation input directory: {input_dir}."
+        )
     structure_file = copy_to_workdir(structure_file, workdir)
 
     # Discover topology file and copy to workdir

@@ -1,9 +1,7 @@
 import random
 import shutil
 from pathlib import Path
-from typing import Dict, Optional, Tuple, Union
-
-from pydantic import BaseSettings
+from typing import Dict, Optional, Tuple
 
 try:
     import openmm
@@ -12,7 +10,7 @@ try:
 except ImportError:
     pass  # For testing purposes
 
-PathLike = Union[str, Path]
+from mdensemble.utils import BaseSettings, PathLike
 
 
 def _configure_amber_implicit(
@@ -292,8 +290,7 @@ def run_simulation(pdb_file: Path, workdir: Path, config: MDSimulationSettings) 
     nsteps = int(simulation_length_ns / dt_ps)
 
     # Set up reporters to write simulation trajectory file, logs, and checkpoints
-    traj_file = workdir / "sim.dcd"
-    sim.reporters.append(app.DCDReporter(traj_file, report_steps))
+    sim.reporters.append(app.DCDReporter(workdir / "sim.dcd", report_steps))
     sim.reporters.append(
         app.StateDataReporter(
             str(workdir / "sim.log"),
@@ -306,7 +303,9 @@ def run_simulation(pdb_file: Path, workdir: Path, config: MDSimulationSettings) 
             totalEnergy=True,
         )
     )
-    sim.reporters.append(app.CheckpointReporter("checkpoint.chk", report_steps))
+    sim.reporters.append(
+        app.CheckpointReporter(workdir / "checkpoint.chk", report_steps)
+    )
 
     # Run simulation
     sim.step(nsteps)

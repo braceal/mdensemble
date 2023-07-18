@@ -69,6 +69,7 @@ def _configure_amber_explicit(
     heat_bath_friction_coef: float,
     platform: "openmm.Platform",
     platform_properties: Dict[str, str],
+    pressure: float,
     explicit_barostat: str,
 ) -> "app.Simulation":
     """Helper function to configure explicit amber simulations with openmm."""
@@ -89,12 +90,16 @@ def _configure_amber_explicit(
 
     if explicit_barostat == "MonteCarloBarostat":
         system.addForce(
-            openmm.MonteCarloBarostat(1 * u.bar, temperature_kelvin * u.kelvin)
+            openmm.MonteCarloBarostat(pressure * u.bar, temperature_kelvin * u.kelvin)
         )
     elif explicit_barostat == "MonteCarloAnisotropicBarostat":
         system.addForce(
             openmm.MonteCarloAnisotropicBarostat(
-                (1, 1, 1) * u.bar, temperature_kelvin * u.kelvin, False, False, True
+                (pressure, pressure, pressure) * u.bar,
+                temperature_kelvin * u.kelvin,
+                False,
+                False,
+                True,
             )
         )
     else:
@@ -116,6 +121,7 @@ def configure_simulation(
     temperature_kelvin: float,
     heat_bath_friction_coef: float,
     checkpoint_file: Optional[PathLike] = None,
+    pressure: float = 1.0,
     explicit_barostat: str = "MonteCarloBarostat",
     run_minimization: bool = True,
     set_positions: bool = True,
@@ -142,6 +148,8 @@ def configure_simulation(
         The heat bath friction coefficient to use for the simulation.
     checkpoint_file : Optional[PathLike], optional
         The checkpoint file to load the simulation from, by default None.
+    pressure : float, optional
+        The pressure to use for the simulation, by default 1.0.
     explicit_barostat : str, optional
         The barostat used for an `explicit` solvent simulation can be either
         "MonteCarloBarostat" by deafult, or "MonteCarloAnisotropicBarostat".
@@ -194,6 +202,7 @@ def configure_simulation(
             heat_bath_friction_coef,
             platform,
             platform_properties,
+            pressure,
             explicit_barostat,
         )
 
@@ -247,6 +256,8 @@ class MDSimulationSettings(BaseSettings):
     """The temperature to use for the simulation."""
     heat_bath_friction_coef: float = 1.0
     """The heat bath friction coefficient to use for the simulation."""
+    pressure: float = 1.0
+    """The pressure to use for the simulation."""
     explicit_barostat: str = "MonteCarloBarostat"
     """The barostat used for an `explicit` solvent simulation can be either
     "MonteCarloBarostat" by default, or "MonteCarloAnisotropicBarostat"."""
@@ -303,6 +314,7 @@ def run_simulation(
         temperature_kelvin=config.temperature_kelvin,
         heat_bath_friction_coef=config.heat_bath_friction_coef,
         checkpoint_file=checkpoint_file,
+        pressure=config.pressure,
         explicit_barostat=config.explicit_barostat,
     )
 

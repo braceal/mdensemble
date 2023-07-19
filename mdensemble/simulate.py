@@ -207,7 +207,7 @@ def configure_simulation(
 
     # Load checkpoint file
     if checkpoint_file is not None:
-        sim.loadCheckpoint(checkpoint_file)
+        sim.loadCheckpoint(str(checkpoint_file))
         return sim
 
     # Set the positions

@@ -63,9 +63,9 @@ python -m mdensemble.workflow -c examples/example.yaml
 ```
 This will generate an output directory `example_output` for the run with logs, results, and task output folders.
 
-Note: You may need to modify the `compute_settings` field in `examples/example.yaml` to match the GPUs currently available on your system.
+**Note**: You may need to modify the `compute_settings` field in `examples/example.yaml` to match the GPUs currently available on your system.
 
-Note: It can be helpful to run the workflow with `nohup`, e.g.,
+**Note**: It can be helpful to run the workflow with `nohup`, e.g.,
 ```console
 nohup python -m mdensemble.workflow -c examples/example.yaml &
 ```

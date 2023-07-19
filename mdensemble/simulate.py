@@ -342,6 +342,7 @@ def run_simulation(
             potentialEnergy=True,
             temperature=True,
             totalEnergy=True,
+            append=checkpoint_file is not None,
         )
     )
     sim.reporters.append(

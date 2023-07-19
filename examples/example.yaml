@@ -2,25 +2,26 @@
 output_dir: example_output
 
 # Path to a directory containing many input subdirectories, each containing a PDB file.
-simulation_input_dir: data/test_systems
+#simulation_input_dir: data/test_systems
+simulation_input_dir: example_output/tasks
 
 # The simulation parameters
 simulation_config:
   solvent_type: explicit
-  simulation_length_ns: 10
-  report_interval_ps: 50
+  simulation_length_ns: 0.1
+  report_interval_ps: 1
   dt_ps: 0.002
   temperature_kelvin: 310
   heat_bath_friction_coef: 1
   explicit_barostat: MonteCarloAnisotropicBarostat
 
 # How many parallel tasks to run, this should generally be set to the number of GPUs available.
-num_parallel_tasks: 4
+num_parallel_tasks: 2
 
 # The compute settings
 compute_settings:
   name: workstation # Run on a small GPU workstation
-  available_accelerators: [0, 1, 2, 3] # Set as you would CUDA_VISIBLE_DEVICES
+  available_accelerators: [1, 2] # Set as you would CUDA_VISIBLE_DEVICES
 
 # Uncomment this to run on Polaris (please adjust settings appropriately 
 # and comment out the workstation compute settings)

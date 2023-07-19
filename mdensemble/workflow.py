@@ -41,7 +41,6 @@ def run_task(
         Node local storage option for writing output files, by default None.
     """
     import shutil
-    import uuid
 
     from mdensemble.simulate import run_simulation
 
@@ -52,8 +51,9 @@ def run_task(
         workdir = output_dir
 
     # Output directory name
-    workdir_name = "simulation-" + str(uuid.uuid4())
+    workdir_name = input_dir.name
     workdir = workdir / workdir_name
+    workdir.mkdir(exist_ok=True)
 
     # Run the simulation
     run_simulation(input_dir, workdir, config)

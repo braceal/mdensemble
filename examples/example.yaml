@@ -22,8 +22,11 @@ num_parallel_tasks: 4
 
 # The compute settings
 compute_settings:
-  name: workstation # Run on a small GPU workstation
-  available_accelerators: [0, 1, 2, 3] # Set as you would CUDA_VISIBLE_DEVICES
+  # Run on a small GPU workstation
+  name: workstation
+  # Set as you would CUDA_VISIBLE_DEVICES (If you change the total number of GPUs, 
+  # then also change num_parallel_tasks to match it)
+  available_accelerators: [0, 1, 2, 3]
 
 # Uncomment this to run on Polaris (please adjust settings appropriately 
 # and comment out the workstation compute settings)

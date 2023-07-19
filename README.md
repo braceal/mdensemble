@@ -7,8 +7,9 @@ Run molecular dynamics ensemble simulations in parallel using OpenMM.
   - [Table of Contents](#table-of-contents)
   - [Installation](#installation)
   - [Usage](#usage)
-    - [Example output](#example-output)
+    - [Comprehensive example](#comprehensive-example)
     - [Configuring your own workflow](#configuring-your-own-workflow)
+    - [Tips](#tips)
 
 ## Installation
 
@@ -33,7 +34,28 @@ make install
 
 ## Usage
 
-### Example output
+### Comprehensive example
+
+First setup the example simulation input files:
+```console
+tar -xzf data/test_systems.tar.gz --directory data
+```
+
+You can see that the `data/test_system` directory now contains a subdirectory for each simulation input:
+```console
+$ls data/test_systems/*
+data/test_systems/COMPND168_37:
+result.gro  result.top
+
+data/test_systems/COMPND184_15:
+result.gro  result.top
+
+data/test_systems/COMPND236_1:
+result.gro  result.top
+
+data/test_systems/COMPND250_590:
+result.gro  result.top
+```
 
 The workflow can be tested on a workstation (a system with a few GPUs) via:
 ```console
@@ -41,7 +63,14 @@ python -m mdensemble.workflow -c examples/example.yaml
 ```
 This will generate an output directory `example_output` for the run with logs, results, and task output folders.
 
-Inside the output directory, you will find:
+Note: You may need to modify the `compute_settings` field in `examples/example.yaml` to match the GPUs currently available on your system.
+
+Note: It can be helpful to run the workflow with `nohup`, e.g.,
+```console
+nohup python -m mdensemble.workflow -c examples/example.yaml &
+```
+
+Once you start the workflow, inside the output directory, you will find:
 ```console
 $ ls example_output
 params.yaml  proxy-store  result  run-info  runtime.log  tasks
@@ -55,7 +84,7 @@ params.yaml  proxy-store  result  run-info  runtime.log  tasks
 
 If everything is working properly, you only need to look in the `tasks` folder for your outputs.
 
-As an example, the simulation run directories may look like:
+As an example, the simulation run directories look like:
 ```console
 $ ls example_output/tasks/COMPND250_590
 checkpoint.chk  result.gro  result.top  sim.dcd  sim.log
@@ -84,3 +113,8 @@ The name `COMPND250_590` is taken from the input simulation directory specified 
 - `num_parallel_tasks`: The number of simulations to run in parallel (should correspond to the number of GPUs).
 - `node_local_path`: A node local storage option (if available, default is `None`).
 - `compute_settings`: The compute settings for the Parsl workflow backend. We currently support `workstation` or `polaris`. See `examples/example.yaml` for an example of each. If you would like to run `mdensemble` on a different system, you will need to add a new compute setting to `mdensemble/parsl.py` by subclassing `BaseComputeSettings` and adding your new class to `ComputeSettingsTypes`. This should be straightforward if you are familiar with Parsl, for more example configurations, please see the [Parsl documentation](https://parsl.readthedocs.io/en/stable/userguide/configuring.html).
+
+### Tips
+1. Monitor your simulation output files: `tail -f example_output/tasks/*/*.log`
+2. Monitor the runtime log: `tail -f example_output/runtime.log`
+3. Monitor new simulation starts: `watch 'ls example_output/tasks/*'`

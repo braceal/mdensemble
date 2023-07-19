@@ -112,7 +112,7 @@ The name `COMPND250_590` is taken from the input simulation directory specified 
   - `explicit_barostat`: The barostat type for explicit solvent simulations. Can be either `MonteCarloBarostat` or `MonteCarloAnisotropicBarostat`.
 - `num_parallel_tasks`: The number of simulations to run in parallel (should correspond to the number of GPUs).
 - `node_local_path`: A node local storage option (if available, default is `None`).
-- `compute_settings`: The compute settings for the Parsl workflow backend. We currently support `workstation` or `polaris`. See `examples/example.yaml` for an example of each. If you would like to run `mdensemble` on a different system, you will need to add a new compute setting to `mdensemble/parsl.py` by subclassing `BaseComputeSettings` and adding your new class to `ComputeSettingsTypes`. This should be straightforward if you are familiar with Parsl, for more example configurations, please see the [Parsl documentation](https://parsl.readthedocs.io/en/stable/userguide/configuring.html).
+- `compute_settings`: The compute settings for the Parsl workflow backend. We currently support `workstation` or `polaris`. See `examples/example.yaml` for an example of each. If you would like to run `mdensemble` on a different system, you will need to add a new compute setting to `mdensemble/parsl.py` by subclassing `BaseComputeSettings` and adding your new class to `ComputeSettingsTypes`. This should be straightforward if you are familiar with Parsl. For more example Parsl configurations, please see the [Parsl documentation](https://parsl.readthedocs.io/en/stable/userguide/configuring.html).
 
 ### Tips
 1. Monitor your simulation output files: `tail -f example_output/tasks/*/*.log`

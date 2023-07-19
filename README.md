@@ -82,7 +82,7 @@ params.yaml  proxy-store  result  run-info  runtime.log  tasks
 - `runtime.log`: the workflow log
 - `tasks`: directory containing a subdirectory for each submitted task. This is where the output files of your simulations,  will be written.
 
-If everything is working properly, you only need to look in the `tasks` folder for your outputs.
+**Note**: If everything is working properly, you only need to look in the `tasks` folder for your outputs.
 
 As an example, the simulation run directories look like:
 ```console

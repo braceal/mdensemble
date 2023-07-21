@@ -8,7 +8,7 @@ DATA_PATH = Path(__file__).parent.parent / "data"
 def test_run_simulation() -> None:
     config = MDSimulationSettings(
         solvent_type="explicit",
-        simulation_length_ns=0.01,
+        simulation_length_ns=0.02,
         report_interval_ps=10,
         explicit_barostat="MonteCarloAnisotropicBarostat",
     )

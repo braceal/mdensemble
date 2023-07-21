@@ -14,7 +14,7 @@ from proxystore.store.file import FileStore
 
 from mdensemble.parsl import ComputeSettingsTypes
 from mdensemble.simulate import MDSimulationSettings
-from mdensemble.utils import BaseSettings, path_validator
+from mdensemble.utils import BaseSettings, path_validator, mkdir_validator
 
 
 def run_task(
@@ -136,6 +136,7 @@ class WorkflowSettings(BaseSettings):
     """The compute settings to use."""
 
     # validators
+    _output_dir_mkdir = mkdir_validator("output_dir")
     _simulation_input_dir_exists = path_validator("simulation_input_dir")
 
     def configure_logging(self) -> None:
@@ -155,7 +156,6 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--config", required=True)
     args = parser.parse_args()
     cfg = WorkflowSettings.from_yaml(args.config)
-    cfg.output_dir.mkdir(exist_ok=True, parents=True)
     cfg.dump_yaml(cfg.output_dir / "params.yaml")
     cfg.configure_logging()
 

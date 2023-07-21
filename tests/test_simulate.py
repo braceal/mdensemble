@@ -9,7 +9,7 @@ def test_run_simulation() -> None:
     config = MDSimulationSettings(
         solvent_type="explicit",
         simulation_length_ns=0.1,
-        report_interval_ps=0.1,
+        report_interval_ps=1,
         explicit_barostat="MonteCarloAnisotropicBarostat",
     )
 

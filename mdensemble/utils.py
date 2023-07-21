@@ -19,20 +19,24 @@ def _resolve_path_exists(value: Optional[Path]) -> Optional[Path]:
         raise FileNotFoundError(p)
     return p
 
+
 def _resolve_mkdir(value: Path) -> Path:
     p = value.resolve()
     p.mkdir(exist_ok=False, parents=True)
     return p
+
 
 def path_validator(field: str) -> classmethod:
     decorator = validator(field, allow_reuse=True)
     _validator = decorator(_resolve_path_exists)
     return _validator
 
+
 def mkdir_validator(field: str) -> classmethod:
     decorator = validator(field, allow_reuse=True)
     _validator = decorator(_resolve_mkdir)
     return _validator
+
 
 class BaseSettings(_BaseSettings):
     """Base settings to provide an easier interface to read/write YAML files."""

@@ -14,7 +14,7 @@ from proxystore.store.file import FileStore
 
 from mdensemble.parsl import ComputeSettingsTypes
 from mdensemble.simulate import MDSimulationSettings
-from mdensemble.utils import BaseSettings, path_validator, mkdir_validator
+from mdensemble.utils import BaseSettings, mkdir_validator, path_validator
 
 
 def run_task(

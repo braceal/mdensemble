@@ -15,6 +15,6 @@ def test_run_simulation() -> None:
 
     input_dir = Path(DATA_PATH / "test_system" / "COMPND236_1")
     output_dir = Path("test_output")
-    output_dir.mkdir()
+    output_dir.mkdir(exist_ok=True)
 
     run_simulation(input_dir, output_dir, config)

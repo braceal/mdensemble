@@ -18,3 +18,6 @@ def test_run_simulation() -> None:
     output_dir.mkdir(exist_ok=True)
 
     run_simulation(input_dir, output_dir, config)
+
+if __name__ == "__main__":
+    test_run_simulation()

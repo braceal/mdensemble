@@ -2,7 +2,7 @@ from pathlib import Path
 
 from mdensemble.simulate import MDSimulationSettings, run_simulation
 
-DATA_PATH = Path(__file__).parent / "data"
+DATA_PATH = Path(__file__).parent.parent / "data"
 
 
 def test_run_simulation() -> None:

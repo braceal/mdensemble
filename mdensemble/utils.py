@@ -22,7 +22,7 @@ def _resolve_path_exists(value: Optional[Path]) -> Optional[Path]:
 
 def _resolve_mkdir(value: Path) -> Path:
     p = value.resolve()
-    p.mkdir(exist_ok=False, parents=True)
+    p.mkdir(exist_ok=True, parents=True)
     return p
 
 

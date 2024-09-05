@@ -22,7 +22,7 @@ num_parallel_tasks: 12
 
 # The compute settings
 
-# Uncomment this to run on Polaris (please adjust settings appropriately 
+# Uncomment this to run on Sunspot (please adjust settings appropriately 
 # and comment out the workstation compute settings)
 compute_settings:
    name: sunspot # Run on the Polaris supercomputer @ ALCF

@@ -16,7 +16,6 @@ from mdensemble.parsl import ComputeSettingsTypes
 from mdensemble.simulate import MDSimulationSettings
 from mdensemble.utils import BaseSettings, mkdir_validator, path_validator
 
-
 def run_task(
     input_dir: Path,
     output_dir: Path,
@@ -158,7 +157,7 @@ if __name__ == "__main__":
     cfg = WorkflowSettings.from_yaml(args.config)
     cfg.dump_yaml(cfg.output_dir / "params.yaml")
     cfg.configure_logging()
-
+    print(cfg)
     # Make the proxy store
     store = FileStore(name="file", store_dir=str(cfg.output_dir / "proxy-store"))
     register_store(store)

@@ -18,23 +18,23 @@ simulation_config:
   explicit_barostat: MonteCarloAnisotropicBarostat
 
 # How many parallel tasks to run, this should generally be set to the number of GPUs available.
-num_parallel_tasks: 4
+num_parallel_tasks: 12
 
 # The compute settings
-compute_settings:
+#compute_settings:
   # Run on a small GPU workstation
-  name: workstation
+#  name: sunspot
   # Set as you would CUDA_VISIBLE_DEVICES (If you change the total number of GPUs, 
   # then also change num_parallel_tasks to match it)
-  available_accelerators: [0, 1, 2, 3]
+  #available_accelerators: [0, 1, 2, 3]
 
 # Uncomment this to run on Polaris (please adjust settings appropriately 
 # and comment out the workstation compute settings)
-# compute_settings:
-#   name: polaris # Run on the Polaris supercomputer @ ALCF
-#   num_nodes: 1 # 4 GPUs per node, if you change this, make sure to change num_parallel_tasks
-#   worker_init: "module load conda; conda activate my_env"
-#   scheduler_options: "#PBS -l filesystems=home:eagle"
-#   account: RL-fold
-#   queue: debug
-#   walltime: 00:30:00
+compute_settings:
+   name: sunspot # Run on the Polaris supercomputer @ ALCF
+   num_nodes: 1 # 4 GPUs per node, if you change this, make sure to change num_parallel_tasks
+   worker_init: "module load frameworks/2024.1; conda activate /lus/gila/projects/candle_aesp_CNDA/avasan/envs/mdensemble"
+   scheduler_options: "#PBS -l filesystems=home:eagle"
+   account: candle_aesp_CNDA
+   queue: debug
+   walltime: 00:30:00

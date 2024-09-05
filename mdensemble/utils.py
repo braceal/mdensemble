@@ -49,4 +49,5 @@ class BaseSettings(_BaseSettings):
     def from_yaml(cls: Type[_T], filename: PathLike) -> _T:
         with open(filename) as fp:
             raw_data = yaml.safe_load(fp)
+        print(raw_data)
         return cls(**raw_data)  # type: ignore

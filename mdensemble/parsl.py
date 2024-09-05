@@ -196,17 +196,6 @@ class SunspotSettings(BaseComputeSettings):
                             bind_cmd="--cpu-bind",
                             overrides="--depth=208 --ppn 1"
                         ),  # Ensures 1 manger per node and allows it to divide work among all 208 threads
-                        #worker_init="""
-                        #            export HTTP_PROXY=http://proxy.alcf.anl.gov:3128
-                        #            export HTTPS_PROXY=http://proxy.alcf.anl.gov:3128
-                        #            export http_proxy=http://proxy.alcf.anl.gov:3128
-                        #            export https_proxy=http://proxy.alcf.anl.gov:3128
-                        #            git config --global http.proxy http://proxy.alcf.anl.gov:3128
-                        #            echo 'before module load'
-                        #            module load frameworks/2024.1
-                        #            echo 'after module load'
-                        #            conda activate /lus/gila/projects/candle_aesp_CNDA/avasan/envs/mdensemble
-                        #            echo 'after env activate' """,
                         worker_init=self.worker_init,
                         nodes_per_block=self.num_nodes,
                         account=self.account,

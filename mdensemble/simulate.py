@@ -174,7 +174,7 @@ def configure_simulation(
     except Exception:
         try:
             platform = openmm.Platform.getPlatformByName("OpenCL")
-            platform_properties = {"DeviceIndex": str(gpu_index)}
+            platform_properties = {'OpenCLPlatformIndex': str(gpu_index), "DeviceIndex": str(gpu_index)}
         except Exception:
             platform = openmm.Platform.getPlatformByName("CPU")
             platform_properties = {}

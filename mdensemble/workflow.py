@@ -16,8 +16,8 @@ from colmena.task_server import ParslTaskServer
 from colmena.thinker import agent
 from colmena.thinker import BaseThinker
 from colmena.thinker import result_processor
-from proxystore.store import register_store
-from proxystore.store.file import FileStore
+from proxystore.connectors.file import FileConnector
+from proxystore.store import Store
 from pydantic import Field
 from pydantic import model_validator
 from typing_extensions import Self
@@ -201,24 +201,26 @@ if __name__ == '__main__':
     cfg = WorkflowSettings.from_yaml(args.config)
     cfg.dump_yaml(cfg.output_dir / 'params.yaml')
     cfg.configure_logging()
-    # Make the proxy store
-    store = FileStore(
-        name='file',
-        store_dir=str(cfg.output_dir / 'proxy-store'),
+
+    # Make the proxystore
+    store = Store(
+        name='file-store',
+        register=True,
+        connector=FileConnector(store_dir=str(cfg.output_dir / 'proxy-store')),
     )
-    register_store(store)
 
     # Make the queues
     queues = PipeQueues(
         serialization_method='pickle',
         topics=['task'],
-        proxystore_name='file',
+        proxystore_name='file-store',
         proxystore_threshold=10000,
     )
 
-    # Define the parsl configuration (this can be done using the config_factory
-    # for common use cases or by defining your own configuration.)
-    parsl_config = cfg.compute_settings.config_factory(
+    # Define the parsl configuration (this can be done using the
+    # get_parsl_config for common use cases or by defining your
+    # own configuration.)
+    parsl_config = cfg.compute_settings.get_parsl_config(
         cfg.output_dir / 'run-info',
     )
 
@@ -263,8 +265,8 @@ if __name__ == '__main__':
     finally:
         queues.send_kill_signal()
 
-    # Wait for the task server to complete
-    doer.join()
+        # Wait for the task server to complete
+        doer.join()
 
-    # Clean up proxy store
-    store.close()
+        # Clean up proxy store
+        store.close()

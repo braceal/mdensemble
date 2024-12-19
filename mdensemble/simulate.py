@@ -1,30 +1,33 @@
+"""Simulation module."""
+
+from __future__ import annotations
+
 import random
 import shutil
 from pathlib import Path
-from typing import Dict, Optional, Tuple
 
 import parmed as pmd
 
 try:
     import openmm
-    import openmm.app as app
     import openmm.unit as u
+    from openmm import app
 except ImportError:
     pass  # For testing purposes
 
-from mdensemble.utils import BaseSettings, PathLike
+from mdensemble.utils import BaseModel
 
 
 def _configure_amber_implicit(
-    pdb_file: PathLike,
-    top_file: Optional[PathLike],
+    pdb_file: str | Path,
+    top_file: str | Path | None,
     dt_ps: float,
     temperature_kelvin: float,
     heat_bath_friction_coef: float,
-    platform: "openmm.Platform",
-    platform_properties: Dict[str, str],
-) -> Tuple["app.Simulation", Optional["app.PDBFile"]]:
-    """Helper function to configure implicit amber simulations with openmm."""
+    platform: openmm.Platform,
+    platform_properties: dict[str, str],
+) -> tuple[app.Simulation, app.PDBFile | None]:
+    """Configure implicit amber simulations with openmm."""
     # Configure system
     if top_file is not None:
         pdb = None
@@ -38,7 +41,7 @@ def _configure_amber_implicit(
     else:
         pdb = app.PDBFile(str(pdb_file))
         top = pdb.topology
-        forcefield = app.ForceField("amber14-all.xml", "implicit/gbn2.xml")
+        forcefield = app.ForceField('amber14-all.xml', 'implicit/gbn2.xml')
         system = forcefield.createSystem(
             top,
             nonbondedMethod=app.CutoffNonPeriodic,
@@ -54,7 +57,13 @@ def _configure_amber_implicit(
     )
     integrator.setConstraintTolerance(0.00001)
 
-    sim = app.Simulation(top, system, integrator, platform, platform_properties)
+    sim = app.Simulation(
+        top,
+        system,
+        integrator,
+        platform,
+        platform_properties,
+    )
 
     # Returning the pdb file object for later use to reduce I/O.
     # If a topology file is passed, the pdb variable is None.
@@ -62,17 +71,17 @@ def _configure_amber_implicit(
 
 
 def _configure_amber_explicit(
-    pdb_file: PathLike,
-    top_file: PathLike,
+    pdb_file: str | Path,
+    top_file: str | Path,
     dt_ps: float,
     temperature_kelvin: float,
     heat_bath_friction_coef: float,
-    platform: "openmm.Platform",
-    platform_properties: Dict[str, str],
+    platform: openmm.Platform,
+    platform_properties: dict[str, str],
     pressure: float,
     explicit_barostat: str,
-) -> "app.Simulation":
-    """Helper function to configure explicit amber simulations with openmm."""
+) -> app.Simulation:
+    """Configure explicit amber simulations with openmm."""
     pdb = pmd.load_file(str(top_file), xyz=str(pdb_file))
     # top = app.AmberPrmtopFile(str(top_file))
     system = pdb.createSystem(
@@ -88,11 +97,14 @@ def _configure_amber_explicit(
         dt_ps * u.picosecond,
     )
 
-    if explicit_barostat == "MonteCarloBarostat":
+    if explicit_barostat == 'MonteCarloBarostat':
         system.addForce(
-            openmm.MonteCarloBarostat(pressure * u.bar, temperature_kelvin * u.kelvin)
+            openmm.MonteCarloBarostat(
+                pressure * u.bar,
+                temperature_kelvin * u.kelvin,
+            ),
         )
-    elif explicit_barostat == "MonteCarloAnisotropicBarostat":
+    elif explicit_barostat == 'MonteCarloAnisotropicBarostat':
         system.addForce(
             openmm.MonteCarloAnisotropicBarostat(
                 (pressure, pressure, pressure) * u.bar,
@@ -100,40 +112,47 @@ def _configure_amber_explicit(
                 False,
                 False,
                 True,
-            )
+            ),
         )
     else:
-        raise ValueError(f"Invalid explicit_barostat option: {explicit_barostat}")
+        raise ValueError(
+            f'Invalid explicit_barostat option: {explicit_barostat}',
+        )
 
     sim = app.Simulation(
-        pdb.topology, system, integrator, platform, platform_properties
+        pdb.topology,
+        system,
+        integrator,
+        platform,
+        platform_properties,
     )
 
     return sim, pdb
 
 
 def configure_simulation(
-    pdb_file: PathLike,
-    top_file: Optional[PathLike],
+    pdb_file: str | Path,
+    top_file: str | Path | None,
     solvent_type: str,
     gpu_index: int,
     dt_ps: float,
     temperature_kelvin: float,
     heat_bath_friction_coef: float,
-    checkpoint_file: Optional[PathLike] = None,
+    checkpoint_file: str | Path | None = None,
     pressure: float = 1.0,
-    explicit_barostat: str = "MonteCarloBarostat",
+    explicit_barostat: str = 'MonteCarloBarostat',
     run_minimization: bool = True,
     set_positions: bool = True,
     set_velocities: bool = False,
-) -> "app.Simulation":
+) -> app.Simulation:
     """Configure an OpenMM amber simulation.
+
     Parameters
     ----------
-    pdb_file : PathLike
+    pdb_file : str | Path
         The PDB file to initialize the positions (and topology if
         `top_file` is not present and the `solvent_type` is `implicit`).
-    top_file : Optional[PathLike]
+    top_file : Optional[str | Path]
         The topology file to initialize the systems topology.
     solvent_type : str
         Solvent type can be either `implicit` or `explicit`, if `explicit`
@@ -146,19 +165,20 @@ def configure_simulation(
         The temperature to use for the simulation.
     heat_bath_friction_coef : float
         The heat bath friction coefficient to use for the simulation.
-    checkpoint_file : Optional[PathLike], optional
+    checkpoint_file : Optional[str | Path], optional
         The checkpoint file to load the simulation from, by default None.
     pressure : float, optional
         The pressure to use for the simulation, by default 1.0.
     explicit_barostat : str, optional
         The barostat used for an `explicit` solvent simulation can be either
-        "MonteCarloBarostat" by deafult, or "MonteCarloAnisotropicBarostat".
+        "MonteCarloBarostat" by default, or "MonteCarloAnisotropicBarostat".
     run_minimization : bool, optional
         Whether or not to run energy minimization, by default True.
     set_positions : bool, optional
         Whether or not to set positions (Loads the PDB file), by default True.
     set_velocities : bool, optional
         Whether or not to set velocities to temperature, by default True.
+
     Returns
     -------
     app.Simulation
@@ -166,21 +186,24 @@ def configure_simulation(
     """
     # Configure hardware
     try:
-        platform = openmm.Platform.getPlatformByName("CUDA")
+        platform = openmm.Platform.getPlatformByName('CUDA')
         platform_properties = {
-            "DeviceIndex": str(gpu_index),
-            "CudaPrecision": "mixed",
+            'DeviceIndex': str(gpu_index),
+            'CudaPrecision': 'mixed',
         }
     except Exception:
         try:
-            platform = openmm.Platform.getPlatformByName("OpenCL")
-            platform_properties = {'OpenCLPlatformIndex': str(gpu_index), "DeviceIndex": str(gpu_index)}
+            platform = openmm.Platform.getPlatformByName('OpenCL')
+            platform_properties = {
+                'OpenCLPlatformIndex': str(gpu_index),
+                'DeviceIndex': str(gpu_index),
+            }
         except Exception:
-            platform = openmm.Platform.getPlatformByName("CPU")
+            platform = openmm.Platform.getPlatformByName('CPU')
             platform_properties = {}
 
     # Select implicit or explicit solvent configuration
-    if solvent_type == "implicit":
+    if solvent_type == 'implicit':
         sim, pdb = _configure_amber_implicit(
             pdb_file,
             top_file,
@@ -191,7 +214,7 @@ def configure_simulation(
             platform_properties,
         )
     else:
-        assert solvent_type == "explicit"
+        assert solvent_type == 'explicit'
         assert top_file is not None
         sim, pdb = _configure_amber_explicit(
             pdb_file,
@@ -222,7 +245,8 @@ def configure_simulation(
     # Set velocities to temperature
     if set_velocities:
         sim.context.setVelocitiesToTemperature(
-            temperature_kelvin * u.kelvin, random.randint(1, 10000)
+            temperature_kelvin * u.kelvin,
+            random.randint(1, 10000),
         )
 
     # Minimize energy and equilibrate
@@ -243,10 +267,10 @@ def copy_to_workdir(p: Path, workdir: Path) -> Path:
         return Path(shutil.copytree(p, workdir / p.name))
 
 
-class MDSimulationSettings(BaseSettings):
+class MDSimulationSettings(BaseModel):
     """Settings for an MD simulation."""
 
-    solvent_type: str = "implicit"
+    solvent_type: str = 'implicit'
     """Solvent type can be either `implicit` or `explicit`."""
     simulation_length_ns: float = 10
     """The length of the simulation in nanoseconds."""
@@ -260,49 +284,51 @@ class MDSimulationSettings(BaseSettings):
     """The heat bath friction coefficient to use for the simulation."""
     pressure: float = 1.0
     """The pressure to use for the simulation."""
-    explicit_barostat: str = "MonteCarloBarostat"
+    explicit_barostat: str = 'MonteCarloBarostat'
     """The barostat used for an `explicit` solvent simulation can be either
     "MonteCarloBarostat" by default, or "MonteCarloAnisotropicBarostat"."""
 
 
 def run_simulation(
-    input_dir: Path, workdir: Path, config: MDSimulationSettings
+    input_dir: Path,
+    workdir: Path,
+    config: MDSimulationSettings,
 ) -> None:
     """Run a molecular dynamics simulation with OpenMM.
 
     Parameters
     ----------
     input_dir : Path
-        Path to an input directory containing either a .pdb or .gro file with the
-        system structure, and optionally a .top or .prmtop file with the system topology.
-        If the directory contains a checkpoint.chk file, the simulation will be loaded
-        from the checkpoint.
+        Path to an input directory containing either a .pdb or .gro file
+        with the system structure, and optionally a .top or .prmtop file
+        with the system topology. If the directory contains a checkpoint.chk
+        file, the simulation will be loaded from the checkpoint.
     workdir : Path
-        The directory to write the simulation output files to. Could be the same as input_dir
-        if we are restarting a simulation.
+        The directory to write the simulation output files to. Could be the
+        same as input_dir if we are restarting a simulation.
     config : MDSimulationSettings
         The simulation settings to use.
     """
-
     # Discover structure file to and copy to workdir
-    structure_file = next(input_dir.glob("*.pdb"), None)
+    structure_file = next(input_dir.glob('*.pdb'), None)
     if structure_file is None:
-        structure_file = next(input_dir.glob("*.gro"), None)
+        structure_file = next(input_dir.glob('*.gro'), None)
     if structure_file is None:
         raise FileNotFoundError(
-            f"No .pdb or .gro file found in simulation input directory: {input_dir}"
+            'No .pdb or .gro file found in simulation'
+            f' input directory: {input_dir}',
         )
     structure_file = copy_to_workdir(structure_file, workdir)
 
     # Discover topology file and copy to workdir
-    top_file = next(input_dir.glob("*.top"), None)
+    top_file = next(input_dir.glob('*.top'), None)
     if top_file is None:
-        top_file = next(input_dir.glob("*.prmtop"), None)
+        top_file = next(input_dir.glob('*.prmtop'), None)
     if top_file is not None:
         top_file = copy_to_workdir(top_file, workdir)
 
     # Discover checkpoint file and copy to workdir
-    checkpoint_file = next(input_dir.glob("*.chk"), None)
+    checkpoint_file = next(input_dir.glob('*.chk'), None)
     if checkpoint_file is not None:
         checkpoint_file = copy_to_workdir(checkpoint_file, workdir)
 
@@ -330,11 +356,12 @@ def run_simulation(
     # Number of steps to run each simulation
     nsteps = int(simulation_length_ns / dt_ps)
 
-    # Set up reporters to write simulation trajectory file, logs, and checkpoints
-    sim.reporters.append(app.DCDReporter(workdir / "sim.dcd", report_steps))
+    # Set up reporters to write simulation trajectory file,
+    # logs, and checkpoints
+    sim.reporters.append(app.DCDReporter(workdir / 'sim.dcd', report_steps))
     sim.reporters.append(
         app.StateDataReporter(
-            str(workdir / "sim.log"),
+            str(workdir / 'sim.log'),
             report_steps,
             step=True,
             time=True,
@@ -343,10 +370,10 @@ def run_simulation(
             temperature=True,
             totalEnergy=True,
             append=checkpoint_file is not None,
-        )
+        ),
     )
     sim.reporters.append(
-        app.CheckpointReporter(str(workdir / "checkpoint.chk"), report_steps)
+        app.CheckpointReporter(str(workdir / 'checkpoint.chk'), report_steps),
     )
 
     # Run simulation

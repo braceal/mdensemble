@@ -24,6 +24,6 @@ num_parallel_tasks: 4
 compute_settings:
   # Run on a small GPU workstation
   name: workstation
-  # Set as you would CUDA_VISIBLE_DEVICES (If you change the total number of GPUs, 
+  # Set as you would CUDA_VISIBLE_DEVICES (If you change the total number of GPUs,
   # then also change num_parallel_tasks to match it)
   available_accelerators: [0, 1, 2, 3]

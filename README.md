@@ -29,7 +29,7 @@ To install `mdensemble`:
 ```console
 git clone https://github.com/braceal/mdensemble
 cd mdensemble
-make install
+pip install -e .
 ```
 
 ## Usage
@@ -118,3 +118,22 @@ The name `COMPND250_590` is taken from the input simulation directory specified 
 1. Monitor your simulation output files: `tail -f example_output/tasks/*/*.log`
 2. Monitor the runtime log: `tail -f example_output/runtime.log`
 3. Monitor new simulation starts: `watch 'ls example_output/tasks/*'`
+
+
+## Contributing
+
+For development, it is recommended to use a virtual environment. The following
+commands will create a virtual environment, install the package in editable
+mode, and install the pre-commit hooks.
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -U pip setuptools wheel
+pip install -e '.[dev,docs]'
+pre-commit install
+```
+To test the code, run the following command:
+```bash
+pre-commit run --all-files
+tox -e py310
+```

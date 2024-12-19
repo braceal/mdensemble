@@ -11,10 +11,10 @@ radon
 
 # mypy type stubs:
 types-PyYAML
-types-aiofiles 
-types-orjson 
-types-python-dateutil 
-types-redis 
-types-requests 
+types-aiofiles
+types-orjson
+types-python-dateutil
+types-redis
+types-requests
 types-ujson
 types-jwt

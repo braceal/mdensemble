@@ -1,29 +1,39 @@
 """Utilities to build Parsl configurations."""
-from abc import ABC, abstractmethod
-from typing import Literal, Sequence, Tuple, Union
+
+from __future__ import annotations
+
+from abc import ABC
+from abc import abstractmethod
+from pathlib import Path
+from typing import Literal
+from typing import Sequence
+from typing import Union
 
 from parsl.addresses import address_by_hostname
 from parsl.config import Config
 from parsl.executors import HighThroughputExecutor
 from parsl.launchers import MpiExecLauncher
-from parsl.providers import LocalProvider, PBSProProvider
+from parsl.providers import LocalProvider
+from parsl.providers import PBSProProvider
 
-from mdensemble.utils import BaseSettings, PathLike
+from mdensemble.utils import BaseModel
 
 
-class BaseComputeSettings(BaseSettings, ABC):
+class BaseComputeSettings(BaseModel, ABC):
     """Compute settings (HPC platform, number of GPUs, etc)."""
 
-    name: Literal[""] = ""
+    name: Literal[''] = ''
     """Name of the platform to use."""
 
     @abstractmethod
-    def config_factory(self, run_dir: PathLike) -> Config:
+    def config_factory(self, run_dir: str | Path) -> Config:
         """Create a new Parsl configuration.
+
         Parameters
         ----------
-        run_dir : PathLike
+        run_dir : str | Path
             Path to store monitoring DB and parsl logs.
+
         Returns
         -------
         Config
@@ -33,112 +43,128 @@ class BaseComputeSettings(BaseSettings, ABC):
 
 
 class LocalSettings(BaseComputeSettings):
-    name: Literal["local"] = "local"  # type: ignore[assignment]
+    """Configuration for running on a local machine."""
+
+    name: Literal['local'] = 'local'  # type: ignore[assignment]
     max_workers: int = 1
     cores_per_worker: float = 0.0001
-    worker_port_range: Tuple[int, int] = (10000, 20000)
-    label: str = "htex"
+    worker_port_range: tuple[int, int] = (10000, 20000)
+    label: str = 'htex'
 
-    def config_factory(self, run_dir: PathLike) -> Config:
+    def config_factory(self, run_dir: str | Path) -> Config:
+        """Create a Parsl configuration for running on a local machine."""
         return Config(
             run_dir=str(run_dir),
             strategy=None,
             executors=[
                 HighThroughputExecutor(
-                    address="localhost",
+                    address='localhost',
                     label=self.label,
                     max_workers=self.max_workers,
                     cores_per_worker=self.cores_per_worker,
                     worker_port_range=self.worker_port_range,
-                    provider=LocalProvider(init_blocks=1, max_blocks=1),  # type: ignore[no-untyped-call]
+                    provider=LocalProvider(init_blocks=1, max_blocks=1),
                 ),
             ],
         )
 
 
 class WorkstationSettings(BaseComputeSettings):
-    name: Literal["workstation"] = "workstation"  # type: ignore[assignment]
+    """Configuration for running on a workstation."""
+
+    name: Literal['workstation'] = 'workstation'  # type: ignore[assignment]
     """Name of the platform."""
-    available_accelerators: Union[int, Sequence[str]] = 8
+    available_accelerators: int | Sequence[str] = 8
     """Number of GPU accelerators to use."""
-    worker_port_range: Tuple[int, int] = (10000, 20000)
+    worker_port_range: tuple[int, int] = (10000, 20000)
     """Port range."""
     retries: int = 1
-    label: str = "htex"
+    label: str = 'htex'
 
-    def config_factory(self, run_dir: PathLike) -> Config:
+    def config_factory(self, run_dir: str | Path) -> Config:
+        """Create a Parsl configuration for running on a workstation."""
         return Config(
             run_dir=str(run_dir),
             retries=self.retries,
             executors=[
                 HighThroughputExecutor(
-                    address="localhost",
+                    address='localhost',
                     label=self.label,
-                    cpu_affinity="block",
+                    cpu_affinity='block',
                     available_accelerators=self.available_accelerators,
                     worker_port_range=self.worker_port_range,
-                    provider=LocalProvider(init_blocks=1, max_blocks=1),  # type: ignore[no-untyped-call]
+                    provider=LocalProvider(init_blocks=1, max_blocks=1),
                 ),
             ],
         )
 
 
 class PolarisSettings(BaseComputeSettings):
-    name: Literal["polaris"] = "polaris"  # type: ignore[assignment]
-    label: str = "htex"
+    """Configuration for running on Polaris."""
+
+    name: Literal['polaris'] = 'polaris'  # type: ignore[assignment]
+    label: str = 'htex'
 
     num_nodes: int = 1
     """Number of nodes to request"""
-    worker_init: str = ""
-    """How to start a worker. Should load any modules and activate the conda env."""
-    scheduler_options: str = ""
+    worker_init: str = ''
+    """How to start a worker. Should load any modules and activate envs."""
+    scheduler_options: str = ''
     """PBS directives, pass -J for array jobs"""
     account: str
-    """The account to charge comptue to."""
+    """The account to charge compute to."""
     queue: str
     """Which queue to submit jobs to, will usually be prod."""
     walltime: str
     """Maximum job time."""
     cpus_per_node: int = 64
     """Up to 64 with multithreading."""
-    strategy: str = "simple"
+    strategy: str = 'simple'
 
-    def config_factory(self, run_dir: PathLike) -> Config:
-        """Create a configuration suitable for running all tasks on single nodes of Polaris
-        We will launch 4 workers per node, each pinned to a different GPU
-        Args:
-            num_nodes: Number of nodes to use for the MPI parallel tasks
-            user_options: Options for which account to use, location of environment files, etc
-            run_dir: Directory in which to store Parsl run files. Default: `runinfo`
+    def config_factory(self, run_dir: str | Path) -> Config:
+        """Create a Parsl configuration for running on Polaris.
+
+        Create a configuration suitable for running all tasks on single nodes
+        of Polaris. We will launch 4 workers per node, each pinned to a
+        different GPU.
+
+        Parameters
+        ----------
+        run_dir: str | Path
+            Directory in which to store Parsl run files. Default: `runinfo`.
         """
-
         return Config(
-            retries=1,  # Allows restarts if jobs are killed by the end of a job
+            retries=1,  # Allow restarts if jobs are killed by the end of a job
             executors=[
                 HighThroughputExecutor(
                     label=self.label,
                     heartbeat_period=15,
                     heartbeat_threshold=120,
                     worker_debug=True,
-                    available_accelerators=4,  # Ensures one worker per accelerator
+                    # Ensures one worker per accelerator
+                    available_accelerators=4,
                     address=address_by_hostname(),
-                    cpu_affinity="alternating",
-                    prefetch_capacity=0,  # Increase if you have many more tasks than workers
-                    start_method="spawn",
-                    provider=PBSProProvider(  # type: ignore[no-untyped-call]
+                    cpu_affinity='alternating',
+                    # Increase if you have many more tasks than workers
+                    prefetch_capacity=0,
+                    start_method='spawn',
+                    provider=PBSProProvider(
                         launcher=MpiExecLauncher(
-                            bind_cmd="--cpu-bind", overrides="--depth=64 --ppn 1"
+                            bind_cmd='--cpu-bind',
+                            overrides='--depth=64 --ppn 1',
                         ),  # Updates to the mpiexec command
                         account=self.account,
                         queue=self.queue,
-                        select_options="ngpus=4",
-                        # PBS directives (header lines): for array jobs pass '-J' option
+                        select_options='ngpus=4',
+                        # PBS directives (header lines): for array jobs
+                        # pass '-J' option
                         scheduler_options=self.scheduler_options,
                         worker_init=self.worker_init,
                         nodes_per_block=self.num_nodes,
                         init_blocks=1,
                         min_blocks=0,
-                        max_blocks=1,  # Can increase more to have more parallel jobs
+                        # Can increase more to have more parallel jobs
+                        max_blocks=1,
                         cpus_per_node=self.cpus_per_node,
                         walltime=self.walltime,
                     ),
@@ -149,18 +175,20 @@ class PolarisSettings(BaseComputeSettings):
             app_cache=True,
         )
 
+
 class SunspotSettings(BaseComputeSettings):
-    """Configuration for running on Sunspot
+    """Configuration for running on Sunspot.
 
-    Each GPU tasks uses a single tile"""
+    Each GPU tasks uses a single tile.
+    """
 
-    name: Literal["sunspot"] = "sunspot"  # type: ignore[assignment]
+    name: Literal['sunspot'] = 'sunspot'  # type: ignore[assignment]
     label: str = 'htex'
-    worker_init: str = ""
+    worker_init: str = ''
 
     num_nodes: int = 1
     """Number of nodes to request"""
-    scheduler_options: str = ""
+    scheduler_options: str = ''
     account: str
     """The account to charge compute to."""
     queue: str
@@ -170,38 +198,36 @@ class SunspotSettings(BaseComputeSettings):
     retries: int = 0
     """Number of retries upon failure."""
     cpus_per_node: int = 208
-    strategy: str = "simple"
+    strategy: str = 'simple'
 
-    def config_factory(self, run_dir: PathLike) -> Config:
+    def config_factory(self, run_dir: str | Path) -> Config:
         """Create a Parsl configuration for running on Sunspot."""
-        accel_ids = [
-            f"{gid}.{tid}"
-            for gid in range(6)
-            for tid in range(2)
-        ]
+        accel_ids = [f'{gid}.{tid}' for gid in range(6) for tid in range(2)]
         return Config(
             executors=[
                 HighThroughputExecutor(
                     label=self.label,
-                    available_accelerators=accel_ids,  # Ensures one worker per accelerator
-                    cpu_affinity="block",  # Assigns cpus in sequential order
+                    # Ensures one worker per accelerator
+                    available_accelerators=accel_ids,
+                    cpu_affinity='block',  # Assigns cpus in sequential order
                     prefetch_capacity=0,
                     max_workers=12,
                     cores_per_worker=16,
                     heartbeat_period=30,
                     heartbeat_threshold=300,
                     worker_debug=False,
+                    # Ensures 1 manager per node and allows it to
+                    # divide work among all 208 threads
                     provider=PBSProProvider(
                         launcher=MpiExecLauncher(
-                            bind_cmd="--cpu-bind",
-                            overrides="--depth=208 --ppn 1"
-                        ),  # Ensures 1 manger per node and allows it to divide work among all 208 threads
+                            bind_cmd='--cpu-bind',
+                            overrides='--depth=208 --ppn 1',
+                        ),
                         worker_init=self.worker_init,
                         nodes_per_block=self.num_nodes,
                         account=self.account,
                         queue=self.queue,
                         walltime=self.walltime,
-
                     ),
                 ),
             ],
@@ -211,4 +237,10 @@ class SunspotSettings(BaseComputeSettings):
             app_cache=True,
         )
 
-ComputeSettingsTypes = Union[LocalSettings, WorkstationSettings, PolarisSettings, SunspotSettings]
+
+ComputeSettingsTypes = Union[
+    LocalSettings,
+    WorkstationSettings,
+    PolarisSettings,
+    SunspotSettings,
+]

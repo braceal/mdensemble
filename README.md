@@ -29,7 +29,7 @@ To install `mdensemble`:
 ```console
 git clone https://github.com/braceal/mdensemble
 cd mdensemble
-make install
+pip install -e .
 ```
 
 ## Usage
@@ -112,9 +112,28 @@ The name `COMPND250_590` is taken from the input simulation directory specified 
   - `explicit_barostat`: The barostat type for explicit solvent simulations. Can be either `MonteCarloBarostat` or `MonteCarloAnisotropicBarostat`.
 - `num_parallel_tasks`: The number of simulations to run in parallel (should correspond to the number of GPUs).
 - `node_local_path`: A node local storage option (if available, default is `None`).
-- `compute_settings`: The compute settings for the Parsl workflow backend. We currently support `workstation` or `polaris`. See `examples/example.yaml` for an example of each. If you would like to run `mdensemble` on a different system, you will need to add a new compute setting to `mdensemble/parsl.py` by subclassing `BaseComputeSettings` and adding your new class to `ComputeSettingsTypes`. This should be straightforward if you are familiar with Parsl. For more example Parsl configurations, please see the [Parsl documentation](https://parsl.readthedocs.io/en/stable/userguide/configuring.html).
+- `compute_settings`: The compute settings for the Parsl workflow backend. We currently support `workstation` or `polaris`. See `examples/example.yaml` for an example of each. If you would like to run `mdensemble` on a different system, you will need to add a new compute setting to `mdensemble/parsl.py` by subclassing `BaseComputeConfig` and adding your new class to `ComputeSettingsTypes`. This should be straightforward if you are familiar with Parsl. For more example Parsl configurations, please see the [Parsl documentation](https://parsl.readthedocs.io/en/stable/userguide/configuring.html).
 
 ### Tips
 1. Monitor your simulation output files: `tail -f example_output/tasks/*/*.log`
 2. Monitor the runtime log: `tail -f example_output/runtime.log`
 3. Monitor new simulation starts: `watch 'ls example_output/tasks/*'`
+
+
+## Contributing
+
+For development, it is recommended to use a virtual environment. The following
+commands will create a virtual environment, install the package in editable
+mode, and install the pre-commit hooks.
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -U pip setuptools wheel
+pip install -e '.[dev,docs]'
+pre-commit install
+```
+To test the code, run the following command:
+```bash
+pre-commit run --all-files
+tox -e py310
+```
